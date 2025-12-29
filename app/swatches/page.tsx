@@ -18,7 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Plus, X, RotateCcw, RotateCw } from "lucide-react";
+import {
+  Download,
+  Plus,
+  X,
+  RotateCcw,
+  RotateCw,
+  Home,
+  ArrowLeft,
+} from "lucide-react";
 import {
   generatePalette,
   generateValueGradient,
@@ -31,6 +39,7 @@ import {
   rgbToHex,
   type ColorScheme,
 } from "@/lib/color-utils";
+import { useRouter } from "next/navigation";
 
 type GradientType = "value" | "saturation" | "both";
 type GradientStyle = "steps" | "smooth" | "both";
@@ -52,6 +61,8 @@ export default function SwatchesPage() {
     useState<GradientDirection>("horizontal");
   const [exportScale, setExportScale] = useState(2); // 1x, 2x, 4x, 8x, etc.
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const router = useRouter();
 
   // Generate base palette when start color or scheme changes
   const basePalette = useMemo(() => {
@@ -433,6 +444,16 @@ export default function SwatchesPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Fixed top left home button*/}
+      <Button
+        variant="home"
+        size="lg"
+        onClick={() => router.push("/")}
+        className="absolute top-8 left-8 rounded-full"
+      >
+        <ArrowLeft className="size-6 text-foreground" />
+        <Home className="size-6 text-foreground" />
+      </Button>
       <div>
         <h1 className="text-3xl font-bold mb-2">Color Swatches</h1>
         <p className="text-muted-foreground">
