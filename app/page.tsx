@@ -17,6 +17,7 @@ import {
   Layers,
   RotateCw,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function HomePage() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function HomePage() {
     <div className="flex flex-col gap-12 min-h-[calc(100vh-8rem)]">
       {/* Hero Section */}
       <div className="flex flex-col items-center text-center gap-4 pt-8">
+        <Image src="/logo.png" alt="Swatchbook" width={100} height={100} />
         <div className="flex items-center gap-3 mb-2">
           <Palette className="size-10 text-primary" />
           <h1 className="text-5xl font-bold">Swatchbook</h1>
