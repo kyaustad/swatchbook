@@ -27,6 +27,7 @@ import {
   Home,
   ArrowLeft,
 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import {
   generatePalette,
   generateValueGradient,
@@ -60,6 +61,7 @@ export default function SwatchesPage() {
   const [gradientDirection, setGradientDirection] =
     useState<GradientDirection>("horizontal");
   const [exportScale, setExportScale] = useState(2); // 1x, 2x, 4x, 8x, etc.
+  const [margin, setMargin] = useState(10); // Margin/padding between swatches and edges
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const router = useRouter();
@@ -74,9 +76,8 @@ export default function SwatchesPage() {
 
   // Calculate export dimensions
   const exportDimensions = useMemo(() => {
-    const basePadding = 10;
     const baseSquareSize = 200;
-    const padding = basePadding * exportScale;
+    const padding = margin * exportScale;
     const squareSize = baseSquareSize * exportScale;
     const totalColors = palette.length;
 
@@ -92,7 +93,7 @@ export default function SwatchesPage() {
     const height = rows * (squareSize + padding) + padding;
 
     return { width, height };
-  }, [palette.length, gradientStyle, exportScale]);
+  }, [palette.length, gradientStyle, exportScale, margin]);
 
   // Reset to base palette
   const resetToBasePalette = () => {
@@ -135,9 +136,8 @@ export default function SwatchesPage() {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const basePadding = 10;
       const baseSquareSize = 200;
-      const padding = basePadding * scale;
+      const padding = margin * scale;
       const squareSize = baseSquareSize * scale;
       const totalColors = palette.length;
 
@@ -355,6 +355,7 @@ export default function SwatchesPage() {
       gradientSteps,
       gradientDirection,
       getGradientCoordinates,
+      margin,
     ]
   );
 
@@ -376,6 +377,7 @@ export default function SwatchesPage() {
     gradientStyle,
     gradientSteps,
     gradientDirection,
+    margin,
     generateTexture,
   ]);
 
@@ -614,6 +616,27 @@ export default function SwatchesPage() {
                   {gradientDirection === "diagonal-tr-bl" && "Diagonal (↙)"}
                 </Button>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="margin">Margin/Padding</Label>
+                <span className="text-sm text-muted-foreground">
+                  {margin}px
+                </span>
+              </div>
+              <Slider
+                id="margin"
+                value={[margin]}
+                onValueChange={(value) => setMargin(value[0])}
+                min={0}
+                max={50}
+                step={1}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Adjust the spacing between swatches and image edges
+              </p>
             </div>
           </CardContent>
         </Card>
