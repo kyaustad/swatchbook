@@ -54,6 +54,7 @@ export default function SwatchesPage() {
   const [startColor, setStartColor] = useState("#3b82f6");
   const [colorScheme, setColorScheme] = useState<ColorScheme>("triadic");
   const [paletteCount, setPaletteCount] = useState(5);
+  const [paletteCountInput, setPaletteCountInput] = useState("5");
   const [customPalette, setCustomPalette] = useState<string[]>([]);
   const [gradientType, setGradientType] = useState<GradientType>("value");
   const [gradientStyle, setGradientStyle] = useState<GradientStyle>("smooth");
@@ -70,6 +71,11 @@ export default function SwatchesPage() {
   const basePalette = useMemo(() => {
     return generatePalette(startColor, colorScheme, paletteCount);
   }, [startColor, colorScheme, paletteCount]);
+
+  // Sync paletteCountInput when paletteCount changes externally
+  useEffect(() => {
+    setPaletteCountInput(paletteCount.toString());
+  }, [paletteCount]);
 
   // Use custom palette if it exists, otherwise use base palette
   const palette = customPalette.length > 0 ? customPalette : basePalette;
@@ -533,11 +539,30 @@ export default function SwatchesPage() {
                 type="number"
                 min="2"
                 max="20"
-                value={paletteCount}
+                value={paletteCountInput}
                 onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (value >= 2 && value <= 20) {
-                    setPaletteCount(value);
+                  const value = e.target.value;
+                  // Allow empty string or any input while typing
+                  setPaletteCountInput(value);
+                  const numValue = parseInt(value, 10);
+                  // Update paletteCount if we have a valid number
+                  if (!isNaN(numValue) && numValue >= 2 && numValue <= 20) {
+                    setPaletteCount(numValue);
+                  }
+                }}
+                onBlur={(e) => {
+                  // Clamp to valid range when input loses focus
+                  const value = e.target.value;
+                  const numValue = parseInt(value, 10);
+                  if (value === "" || isNaN(numValue) || numValue < 2) {
+                    setPaletteCount(5);
+                    setPaletteCountInput("5");
+                  } else if (numValue > 20) {
+                    setPaletteCount(20);
+                    setPaletteCountInput("20");
+                  } else {
+                    setPaletteCount(numValue);
+                    setPaletteCountInput(numValue.toString());
                   }
                 }}
               />
