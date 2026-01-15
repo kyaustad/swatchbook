@@ -26,6 +26,8 @@ import {
   RotateCw,
   Home,
   ArrowLeft,
+  LandPlot,
+  PencilLine,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -34,10 +36,8 @@ import {
   generateSaturationGradient,
   generateCombinedGradient,
   getSmoothGradientColor,
-  hexToRgb,
-  rgbToHsl,
-  hslToRgb,
-  rgbToHex,
+  hexToOklch,
+  oklchToHex,
   type ColorScheme,
 } from "@/lib/color-utils";
 import { useRouter } from "next/navigation";
@@ -183,7 +183,8 @@ export default function SwatchesPage() {
             smoothCoords.y2
           );
 
-          const numStops = 20;
+          // Use more stops for smoother gradients in OKLCH (prevents banding)
+          const numStops = 150;
           for (let i = 0; i <= numStops; i++) {
             const position = i / numStops;
             const gradColor = getSmoothGradientColor(
@@ -261,7 +262,7 @@ export default function SwatchesPage() {
           const y = padding + row * (squareSize + padding);
 
           if (gradientStyle === "smooth") {
-            // Draw smooth gradient (Photoshop-style)
+            // Draw smooth gradient
             const coords = getGradientCoordinates(
               x,
               y,
@@ -275,8 +276,8 @@ export default function SwatchesPage() {
               coords.y2
             );
 
-            // Create gradient stops
-            const numStops = 20; // High resolution for smooth gradient
+            // Create gradient stops - use many stops for smooth gradients in OKLCH
+            const numStops = 100; // High resolution for smooth gradient (prevents banding)
             for (let i = 0; i <= numStops; i++) {
               const position = i / numStops;
               const gradColor = getSmoothGradientColor(
@@ -417,16 +418,15 @@ export default function SwatchesPage() {
       ...(customPalette.length > 0 ? customPalette : basePalette),
     ];
 
-    // Generate a slight variation
-    const rgb = hexToRgb(lastColor);
-    const hsl = rgbToHsl(rgb);
-    const newHsl = {
-      h: (hsl.h + 30) % 360,
-      s: Math.max(30, Math.min(100, hsl.s)),
-      l: Math.max(20, Math.min(80, hsl.l)),
+    // Generate a slight variation using OKLCH
+    const oklchColor = hexToOklch(lastColor);
+    const baseH = oklchColor.h ?? 0;
+    const newOklch = {
+      l: Math.max(0.2, Math.min(0.9, oklchColor.l)),
+      c: Math.max(0, Math.min(0.3, oklchColor.c)),
+      h: (baseH + 30) % 360,
     };
-    const newRgb = hslToRgb(newHsl);
-    const newColor = rgbToHex(newRgb);
+    const newColor = oklchToHex(newOklch);
 
     newPalette.push(newColor);
     setCustomPalette(newPalette);
@@ -451,7 +451,7 @@ export default function SwatchesPage() {
         variant="home"
         size="lg"
         onClick={() => router.push("/")}
-        className="absolute top-8 left-8 rounded-full"
+        className="rounded-full"
       >
         <ArrowLeft className="size-6 text-foreground" />
         <Home className="size-6 text-foreground" />
@@ -475,7 +475,10 @@ export default function SwatchesPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="color-picker">Starting Color</Label>
+              <div className="flex items-center gap-2">
+                <LandPlot className="size-6" />
+                <Label htmlFor="color-picker">Starting Color</Label>
+              </div>
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Input
@@ -573,9 +576,7 @@ export default function SwatchesPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="smooth">
-                    Smooth (Photoshop-style)
-                  </SelectItem>
+                  <SelectItem value="smooth">Smooth</SelectItem>
                   <SelectItem value="steps">Steps</SelectItem>
                   <SelectItem value="both">Both (Smooth + Steps)</SelectItem>
                 </SelectContent>
@@ -681,11 +682,13 @@ export default function SwatchesPage() {
                 <div key={index} className="flex flex-col items-center gap-2">
                   <div className="relative group">
                     <div
-                      className="w-16 h-16 rounded-md border-2 border-border shadow-sm cursor-pointer hover:scale-105 transition-transform"
+                      className="w-16 h-16 rounded-md border-2 border-border shadow-sm cursor-pointer hover:scale-105 transition-transform flex items-center justify-center"
                       style={{ backgroundColor: color }}
                       onClick={() => setStartColor(color)}
                       title={`Click to use as starting color: ${color}`}
-                    />
+                    >
+                      <LandPlot className="size-6" />
+                    </div>
                     {palette.length > 2 && (
                       <Button
                         onClick={() => removeColorFromPalette(index)}
@@ -697,15 +700,18 @@ export default function SwatchesPage() {
                       </Button>
                     )}
                   </div>
-                  <Input
-                    type="color"
-                    value={color}
-                    onChange={(e) =>
-                      updateColorInPalette(index, e.target.value)
-                    }
-                    className="w-16 h-8 cursor-pointer"
-                    title="Click to edit color"
-                  />
+                  <div className="relative">
+                    <Input
+                      type="color"
+                      value={color}
+                      onChange={(e) =>
+                        updateColorInPalette(index, e.target.value)
+                      }
+                      className="w-16 h-8 cursor-pointer pr-8"
+                      title="Click to edit color"
+                    />
+                    <PencilLine className="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                  </div>
                   <span className="text-xs font-mono text-muted-foreground">
                     {color}
                   </span>
